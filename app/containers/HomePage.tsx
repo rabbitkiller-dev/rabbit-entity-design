@@ -1,6 +1,9 @@
 import React from 'react';
-import Home from '../components/Home';
+import styles from './HomePage.less';
 
 export default function HomePage() {
-  return <Home />;
+  return (
+    <div className={styles.main}>
+    </div>
+  );
 }

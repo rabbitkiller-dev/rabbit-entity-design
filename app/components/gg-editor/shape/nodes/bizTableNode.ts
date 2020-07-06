@@ -7,47 +7,48 @@ import {
   Item,
   NodeModel
 } from 'gg-editor/lib/common/interfaces';
-import { setAnchorPointsState } from 'gg-editor';
+import { setAnchorPointsState, constants } from 'gg-editor';
 import { optimizeMultilineText } from '../utils';
-import { ItemState } from '../../common/constants';
 
-const TABLE_HEAD_HEIGHT = 30;
+const { ItemState } = constants;
+// 窗口内边距
+const WRAPPER_HORIZONTAL_PADDING = 4;
+// 头部高度
+const TABLE_HEAD_HEIGHT = 16;
 
-const WRAPPER_BORDER_WIDTH = 2;
-const WRAPPER_HORIZONTAL_PADDING = 10;
-
-const WRAPPER_CLASS_NAME = 'node-wrapper';
-const CONTENT_CLASS_NAME = 'node-content';
-const LABEL_CLASS_NAME = 'node-label';
+const WRAPPER_CLASS_NAME = 'table-wrapper';
 const TABLE_HEAD_CLASS_NAME = 'table-head';
-const TABLE_HEAD_LABEL_CLASS_NAME = 'node-label';
+
+interface BizTableNodeModel extends NodeModel {
+  tableName: string;
+  attrs: Array<{ name: string }>;
+}
 
 const bizNode: CustomNode = {
   options: {
     size: [120, 60],
     wrapperStyle: {
-      fill: '#000000',
-      radius: 5
+      radius: 5,
+      lineWidth: 1,
+      fill: '#1f2324',
+      stroke: 'transparent'
     },
-    contentStyle: {
-      fill: '#ffffff',
-      radius: 6
-    },
-    labelStyle: {
-      fill: '#000000',
+    headStyle: {
+      fill: '#aaa',
       textAlign: 'center',
       textBaseline: 'middle'
     },
     stateStyles: {
       [ItemState.Active]: {
         wrapperStyle: {},
-        contentStyle: {},
-        labelStyle: {}
+        headStyle: {}
       } as any,
       [ItemState.Selected]: {
-        wrapperStyle: {},
-        contentStyle: {},
-        labelStyle: {}
+        wrapperStyle: {
+          fill: '#242829',
+          stroke: '#525657'
+        },
+        headStyle: {}
       } as any
     }
   },
@@ -63,8 +64,8 @@ const bizNode: CustomNode = {
     return keyShape;
   },
 
-  drawWrapper(model: NodeModel, group: GGroup) {
-    const [width, height] = this.getSize(model);
+  drawWrapper(model: BizTableNodeModel, group: GGroup) {
+    const [width] = this.getBoxSize(model);
     const { wrapperStyle } = this.getOptions(model);
 
     const shape = group.addShape('rect', {
@@ -74,7 +75,10 @@ const bizNode: CustomNode = {
         x: 0,
         y: 0,
         width,
-        height: 30 + 3 * 27,
+        height:
+          WRAPPER_HORIZONTAL_PADDING * 2 +
+          TABLE_HEAD_HEIGHT * (model.attrs.length + 1) +
+          4,
         ...wrapperStyle
       }
     });
@@ -83,78 +87,58 @@ const bizNode: CustomNode = {
   },
 
   drawTableHead(model: NodeModel, group: GGroup) {
-    const [width, height] = this.getSize(model);
-    const { labelStyle } = this.getOptions(model);
+    const [width] = this.getBoxSize(model);
+    const { headStyle } = this.getOptions(model);
 
-    const tableHead = group.addShape('rect', {
+    const tableHeadLabel = group.addShape('text', {
       className: TABLE_HEAD_CLASS_NAME,
       draggable: true,
       attrs: {
-        x: 2,
-        y: 2,
-        width: width - 4,
-        height: TABLE_HEAD_HEIGHT - 4,
-        fill: '#ffffff',
-        radius: [3, 3, 0, 0]
-      }
-    });
-    const tableHeadLabel = group.addShape('text', {
-      className: TABLE_HEAD_LABEL_CLASS_NAME,
-      draggable: true,
-      attrs: {
-        x: width / 2,
-        y: TABLE_HEAD_HEIGHT / 2,
-        width,
         text: model.tableName,
-        fill: '#000000',
-        textAlign: 'center',
-        textBaseline: 'middle'
+        x: width / 2,
+        y: TABLE_HEAD_HEIGHT / 2 + WRAPPER_HORIZONTAL_PADDING,
+        width,
+        height: TABLE_HEAD_HEIGHT,
+        ...headStyle
       }
     });
 
-    return tableHead;
+    return tableHeadLabel;
   },
 
-  drawTableAttr(model: NodeModel, group: GGroup) {
-    const [width, height] = this.getSize(model);
-    const { labelStyle } = this.getOptions(model);
-    const attrs = [{}, {}, {}];
-    attrs.map((attr, index) => {
-      const tableHead = group.addShape('rect', {
+  drawTableAttr(model: BizTableNodeModel, group: GGroup) {
+    const [width] = this.getBoxSize(model);
+    model.attrs.map((attr, index) => {
+      const tableHead = group.addShape('text', {
         className: TABLE_HEAD_CLASS_NAME,
         draggable: true,
         attrs: {
-          x: 2,
-          y: 2 + TABLE_HEAD_HEIGHT - 4 + 2 + index * 27,
-          width: width - 4,
-          height: 25,
-          fill: '#ffffff'
+          text: attr.name,
+          x: WRAPPER_HORIZONTAL_PADDING,
+          y:
+            WRAPPER_HORIZONTAL_PADDING +
+            TABLE_HEAD_HEIGHT +
+            WRAPPER_HORIZONTAL_PADDING +
+            TABLE_HEAD_HEIGHT * index +
+            TABLE_HEAD_HEIGHT / 2,
+          width: width - WRAPPER_HORIZONTAL_PADDING * 2,
+          height: TABLE_HEAD_HEIGHT,
+          fill: '#777',
+          textBaseline: 'middle'
         }
       });
-      // const attrShape = group.addShape('text', {
-      //   className: TABLE_HEAD_LABEL_CLASS_NAME,
-      //   draggable: true,
-      //   attrs: {
-      //     x: width / 2,
-      //     y: TABLE_HEAD_HEIGHT / 2,
-      //     width,
-      //     text: model.tableName,
-      //     fill: '#000000',
-      //     textAlign: 'center',
-      //     textBaseline: 'middle',
-      //   },
-      // });
+      return tableHead;
     });
   },
 
   setLabelText(model: NodeModel, group: GGroup) {
-    const shape = group.findByClassName(TABLE_HEAD_LABEL_CLASS_NAME);
+    const shape = group.findByClassName(TABLE_HEAD_CLASS_NAME);
 
     if (!shape) {
       return;
     }
 
-    const [width] = this.getSize(model);
+    const [width] = this.getBoxSize(model);
     const { fontStyle, fontWeight, fontSize, fontFamily } = shape.attr();
 
     const text = model.label as string;
@@ -180,13 +164,9 @@ const bizNode: CustomNode = {
   setState(name, value, item) {
     const group = item.getContainer();
     const model = item.getModel();
-    const states = item.getStates() as ItemState[];
+    const states = item.getStates() as constants.ItemState[];
 
-    [
-      WRAPPER_CLASS_NAME,
-      TABLE_HEAD_CLASS_NAME,
-      TABLE_HEAD_LABEL_CLASS_NAME
-    ].forEach(className => {
+    [WRAPPER_CLASS_NAME, TABLE_HEAD_CLASS_NAME].forEach(className => {
       const shape = group.findByClassName(className);
       const options = this.getOptions(model);
 
@@ -211,7 +191,7 @@ const bizNode: CustomNode = {
     if (name === ItemState.Selected) {
       const wrapperShape = group.findByClassName(WRAPPER_CLASS_NAME);
 
-      const [width, height] = this.getSize(model);
+      const [width, height] = this.getBoxSize(model);
 
       // if (value) {
       //   wrapperShape.attr({
@@ -235,7 +215,7 @@ const bizNode: CustomNode = {
     }
   },
 
-  getSize(model: NodeModel) {
+  getBoxSize(model: NodeModel): number[] {
     const { size } = this.getOptions(model);
 
     if (!isArray(size)) {

@@ -3,7 +3,7 @@ import { render } from 'react-dom';
 import { AppContainer as ReactHotAppContainer } from 'react-hot-loader';
 import Root from './containers/Root';
 import { history, configuredStore } from './store';
-import './app.global.css';
+import './app.global.less';
 
 const store = configuredStore();
 
