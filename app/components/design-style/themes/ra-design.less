@@ -1,0 +1,84 @@
+@import '../color/colors';
+
+// The prefix to use on all css classes from ant.
+@ra-prefix: ra-design;
+// An override for the html selector for theme prefixes
+@html-selector: html;
+
+// -------- Colors -----------
+//@primary-color          : #1D8CE0;
+//@primary-color          : #1890ff;
+@primary-color: @blue-6;
+@info-color: #1890ff;
+@success-color: #52c41a;
+@processing-color: #1890ff;
+@error-color: #f5222d;
+@highlight-color: #f5222d;
+@warning-color: #faad14;
+@normal-color: #d9d9d9;
+@white: #fff;
+@black: #000;
+
+@primary-light: #20A0FF;
+@primary-extra: #ddd;
+
+@defulatBorder: 2px solid @back-color;
+
+
+@text-light-color: #869fb1;
+@back-color: #444;
+@back-light-color: #16232d;
+@back-extra-color: #444;
+@font-variant-base: tabular-nums;
+@font-size-base: 13px;
+@font-size-lg: @font-size-base + 2px;
+@font-size-sm: 11px;
+@border-radius-base: 4px;
+@border-radius-sm: 2px;
+
+
+
+@SideBarInterfaceZIndex: 999;
+@DesignMenuZIndex: 1000;
+@DesignDialogZIndex: 1001;
+@StagePageEditorHoverZIndex: 998;
+
+
+/**
+  通用样式
+  包含以上
+*/
+@common-font-size: normal;
+/**顶部颜色*/
+@top-height: 50px; // 高度
+@top-background: #444444; // 顶部背景颜色
+@top-background-border-line: #2b2b2b; // 顶部背景颜色底下边框线
+@top-text-color: #ddd; // 字体颜色
+@top-active-background: @primary-color; // 选项-激活背景
+/**侧边栏*/
+@side-bar-width: 34px; // 宽度
+@side-bar-item-color: @top-text-color; // 选项-字体颜色
+@side-bar-background: @top-background; // 背景色
+@side-bar-item-background: @top-background; // 选项-背景色
+@side-bar-item-active-background: @primary-color; // 选项-激活背景
+@side-bar-item-active-color: #fff; // 选项-激活字体颜色
+/**侧边栏视图*/
+@side-view-title-height: 30px; // 标题-高度
+@side-view-title-background: #444; // 标题-背景色
+@side-view-title-color: @top-text-color; // 标题-字体颜色
+@side-view-menu-background: #525659; // 组件菜单颜色
+@side-view-menu-color: @top-text-color; // 组件菜单鼠标经过-字体颜色
+@side-view-background: #363636; // 视图背景色
+/**舞台栏*/
+@stage-bar-height: 30px; // 高度
+/**右键菜单**/
+@contextmenu-color: #fff; // 右键菜单-字体颜色
+@contextmenu-background: #535658; // 右键菜单-背景色
+@contextmenu-active-color: #fff; // 右键菜单-激活字体颜色
+@contextmenu-active-background: @primary-color; // 右键菜单-激活背景
+@contextmenu-item-height: 30px; // 右键菜单-选项高度
+/**下拉菜单**/
+@select-item-color: #ddd;
+@select-item-background: #535658;
+@select-item-active-color: #fff;
+@select-item-active-background: @primary-color;

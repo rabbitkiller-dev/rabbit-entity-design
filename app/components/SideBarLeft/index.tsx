@@ -6,7 +6,9 @@ import {
   SmileOutlined,
 } from '@ant-design/icons';
 import { getProject } from '../../features/project';
-// import styles from './SideBarLeft.less';
+import styles from './SideBarLeft.less';
+import { Link } from 'react-router-dom';
+import routes from '../../constants/routes.json';
 
 interface SideBarLeftProps {
 }
@@ -35,7 +37,9 @@ export class SideBarLeft extends React.Component<SideBarLeftProps, SideBarLeftSt
           <SmileOutlined />
         </div>
         <div className={styles.item}>
-          <FolderOutlined />
+          <Link to={routes.EDITOR}>
+            <FolderOutlined />
+          </Link>
         </div>
         <div className={styles.divider}></div>
         <div className={styles.item}></div>
