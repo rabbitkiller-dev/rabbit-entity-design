@@ -21,6 +21,7 @@ export default function Routes() {
   return (
     <App>
       <Switch>
+        <Route path={routes.COUNTER} component={CounterPage} />
         <Route
           path={routes.HOME}
           render={(props: any) => (

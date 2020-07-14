@@ -57,9 +57,9 @@
     // 内容区
     .ra-design-tree-node-content-wrapper {
       display: inline-block;
-      height: 40px;
+      height: @tree-title-height;
       margin: 0;
-      line-height: 40px;
+      line-height: @tree-title-height;
       text-decoration: none;
       vertical-align: top;
       overflow: hidden;
@@ -81,10 +81,10 @@
       &.ra-design-tree-switcher,
       &.ra-design-tree-iconEle {
         display: inline-block;
-        width: 30px;
-        height: 40px;
+        width: 26px;
+        height: 26px;
         margin: 0;
-        line-height: 40px;
+        line-height: @tree-title-height;
         text-align: center;
         vertical-align: top;
         border: 0 none;
@@ -171,14 +171,10 @@ ra-design-tree-node[draggable="true"]{
 //@include ra-design-scrollbar;
 //}
 .ra-design-tree{
+  li{
+    height: 40px;
+  }
   .ra-design-tree-treenode-switcher-close, .ra-design-tree-treenode-switcher-open{
-    li{
-      span{
-        &.ra-design-tree-iconEle {
-          height: 37px;
-          line-height: 37px;
-        }
-      }
-    }
+    height: 37px;
   }
 }

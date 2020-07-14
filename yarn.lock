@@ -1376,6 +1376,13 @@
     ajv "^6.12.0"
     ajv-keywords "^3.4.1"
 
+"@editorjs/editorjs@^2.18.0":
+  version "2.18.0"
+  resolved "https://registry.npmjs.org/@editorjs/editorjs/-/editorjs-2.18.0.tgz#bde42183013f5ca98693e77986cc9d8b2c9a1244"
+  dependencies:
+    codex-notifier "^1.1.2"
+    codex-tooltip "^1.0.1"
+
 "@electron/get@^1.0.1":
   version "1.12.2"
   resolved "https://registry.yarnpkg.com/@electron/get/-/get-1.12.2.tgz#6442066afb99be08cefb9a281e4b4692b33764f3"
@@ -4134,6 +4141,14 @@ coa@^2.0.2:
 code-point-at@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/code-point-at/-/code-point-at-1.1.0.tgz#0d070b4d043a5bea33a2f1a40e2edb3d9a4ccf77"
+
+codex-notifier@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.npmjs.org/codex-notifier/-/codex-notifier-1.1.2.tgz#a733079185f4c927fa296f1d71eb8753fe080895"
+
+codex-tooltip@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/codex-tooltip/-/codex-tooltip-1.0.1.tgz#f6e4f39d81507f9c455b667f1287746d14ee8056"
 
 coffeescript@^2.3.1:
   version "2.5.1"

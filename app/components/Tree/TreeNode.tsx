@@ -80,23 +80,23 @@ export class TreeNode extends React.Component<TreeNodeProps, TreeNodeState> {
       [`${this.prefixCls}-switcher_close`]: this.isSwitcherClose
     };
 
-    // this.nzNodeCheckboxClass = {
-    //   [`${this.prefixCls}-checkbox`]: true,
-    //   [`${this.prefixCls}-checkbox-checked`]: this.nzTreeNode.isChecked,
-    //   [`${this.prefixCls}-checkbox-indeterminate`]: this.nzTreeNode.isHalfChecked,
-    //   [`${this.prefixCls}-checkbox-disabled`]: this.nzTreeNode.isDisabled || this.nzTreeNode.isDisableCheckbox
-    // };
-    //
+    this.nzNodeCheckboxClass = {
+      [`${this.prefixCls}-checkbox`]: true,
+      [`${this.prefixCls}-checkbox-checked`]: this.nzTreeNode.isChecked,
+      [`${this.prefixCls}-checkbox-indeterminate`]: this.nzTreeNode.isHalfChecked,
+      [`${this.prefixCls}-checkbox-disabled`]: this.nzTreeNode.isDisabled || this.nzTreeNode.isDisableCheckbox
+    };
+
     this.nzNodeContentClass = {
       [`${this.prefixCls}-node-content-wrapper`]: true,
       [`${this.prefixCls}-node-content-wrapper-open`]: this.isSwitcherOpen,
       [`${this.prefixCls}-node-content-wrapper-close`]: this.isSwitcherClose,
       [`${this.prefixCls}-node-selected`]: this.nzTreeNode.isSelected
     };
-    // this.nzNodeContentIconClass = {
-    //   [`${this.prefixCls}-iconEle`]: true,
-    //   [`${this.prefixCls}-icon__customize`]: true
-    // };
+    this.nzNodeContentIconClass = {
+      [`${this.prefixCls}-iconEle`]: true,
+      [`${this.prefixCls}-icon__customize`]: true
+    };
     this.nzNodeContentLoadingClass = {
       [`${this.prefixCls}-iconEle`]: true,
       [`${this.prefixCls}-icon__open`]: this.isSwitcherOpen,
@@ -123,6 +123,7 @@ export class TreeNode extends React.Component<TreeNodeProps, TreeNodeState> {
   classMapIntoString(classMap: { [index: string]: boolean }): string {
     return Object.keys(classMap).filter((key) => classMap[key]).join(' ');
   }
+
   nzClick(event: MouseEvent): void {
     // event.preventDefault();
     event.stopPropagation();
@@ -132,12 +133,14 @@ export class TreeNode extends React.Component<TreeNodeProps, TreeNodeState> {
     const eventNext = this.nzTreeService.formatEvent('click', this.nzTreeNode, event);
     this.nzTreeService!.triggerEventChange$!.next(eventNext);
   }
+
   nzDblClick(event: MouseEvent): void {
     event.preventDefault();
     event.stopPropagation();
     const eventNext = this.nzTreeService.formatEvent('dblclick', this.nzTreeNode, event);
     this.nzTreeService!.triggerEventChange$!.next(eventNext);
   }
+
   /**
    * collapse node
    * @param event
@@ -194,11 +197,11 @@ export class TreeNode extends React.Component<TreeNodeProps, TreeNodeState> {
       exiting: { height: '0', overflow: 'hidden' },
       exited: { height: '0', overflow: 'hidden' },
     };
-    const children = this.props.nzTreeNode.children.map((node) => {
+    const children = this.nzTreeNode.isExpanded ? this.props.nzTreeNode.children.map((node) => {
       return (
         <TreeNode key={node.key} nzTreeNode={node} nzTreeService={this.nzTreeService}/>
       );
-    });
+    }) : [];
 
     return (
       <span onMouseDown={this.nzClick.bind(this)} onDoubleClick={this.nzDblClick.bind(this)}>
@@ -216,25 +219,18 @@ export class TreeNode extends React.Component<TreeNodeProps, TreeNodeState> {
             </i>}
           </span>
           <span title={this.nzTreeNode.title} className={this.state.nzNodeContentClass}>
-            <span className={this.state.nzNodeContentLoadingClass}>
-              <FileFilled/>
-            </span>
+            {this.nzTreeNode.icon && <span className={this.state.nzNodeContentLoadingClass}>
+              {this.nzTreeNode.icon}
+            </span>}
+
             <span className="ra-design-tree-title">{this.nzTreeNode.title}</span>
           </span>
         </li>
-        <Transition in={this.nzTreeNode.isExpanded} timeout={duration}>
-          {state => (
-            <ul role="group"
-                className="ant-tree-child-tree"
-                data-expanded="true"
-                style={{
-                  ...defaultStyle,
-                  ...transitionStyles[state],
-                }}>
-              {children}
-            </ul>
-          )}
-        </Transition>
+        <ul role="group"
+            className="ant-tree-child-tree"
+            data-expanded="true">
+          {children}
+        </ul>
       </span>
     );
   }

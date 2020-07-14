@@ -42,6 +42,12 @@ export class SideBarLeft extends React.Component<SideBarLeftProps, SideBarLeftSt
           </Link>
         </div>
         <div className={styles.divider}></div>
+        <div className={styles.item}>
+          <Link to={routes.COUNTER}>
+            <FolderOutlined />
+          </Link>
+        </div>
+        <div className={styles.divider}></div>
         <div className={styles.item}></div>
       </div>
     );
