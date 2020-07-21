@@ -4,7 +4,9 @@ import { Switch, Route } from 'react-router-dom';
 import routes from './constants/routes.json';
 import App from './containers/App';
 import HomePage from './containers/HomePage';
-import ModelEditor from './containers/Editor';
+import Editor from './containers/Editor';
+import EntityEditorPage from './containers/EntityEditorPage';
+import { useHistory } from "react-router-dom";
 
 // Lazily load routes and code split with webpacck
 const LazyCounterPage = React.lazy(() =>
@@ -18,15 +20,18 @@ const CounterPage = (props: Record<string, any>) => (
 );
 
 export default function Routes() {
+  let history = useHistory();
+  history.push('/editor');
   return (
     <App>
       <Switch>
         <Route path={routes.COUNTER} component={CounterPage} />
+        <Route path={routes.EDITOR} component={EntityEditorPage}/>
         <Route
           path={routes.HOME}
           render={(props: any) => (
             <HomePage {...props}>
-              <Route path={routes.EDITOR} component={ModelEditor}/>
+              <Route path="/editor2" component={Editor}/>
             </HomePage>
           )}
         />

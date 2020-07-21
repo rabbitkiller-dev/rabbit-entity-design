@@ -1,0 +1,72 @@
+.entity_editor {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  flex-direction: row;
+
+}
+
+.entity_editor_content {
+  flex: 1;
+
+  .ed_head_bar {
+    height: 72px;
+    background: #24313c;
+    -webkit-app-region: drag;
+  }
+
+  .ed_left_view {
+    height: calc(100% - 72px);
+    background: #3c4c56;
+  }
+
+  .ed_right_view {
+    height: calc(100% - 72px);
+    position: relative;
+    overflow: hidden;
+  }
+}
+
+
+.side_bar_left_view {
+
+}
+
+.SideBarLeft {
+  height: 100%;
+  width: 72px;
+  background: #1e2a33;
+  text-align: center;
+  -webkit-app-region: drag
+}
+
+.logo {
+  font-size: 24px;
+  padding-top: 26px;
+  padding-bottom: 26px;
+  -webkit-app-region: no-drag;
+}
+
+.item {
+  font-size: 24px;
+  color: #768185;
+  padding-top: 14px;
+  padding-bottom: 14px;
+
+  .active {
+    color: #ffffff;
+  }
+
+  span {
+    cursor: pointer;
+    -webkit-app-region: no-drag;
+  }
+}
+
+.divider {
+  height: 1px;
+  margin: 12px auto 12px;
+  width: 24px;
+  background: #404c55;
+  box-sizing: content-box;
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch, createDispatchHook, connect } from 'react-redux';
 import GGEditor, { Flow } from 'gg-editor';
+import fs from 'fs';
 import path from 'path';
 import styles from './Editor.less';
 import { Tree } from '../components/Tree';
@@ -17,6 +18,7 @@ import { TreeNodeModel } from '../components/Tree/tree-node.model';
 import { checkFileName, checkFileExists } from '../features/project';
 import { FormInstance } from 'antd/lib/form';
 import { forEachTree } from '../utils/tree';
+import EditorJs from '../components/EdtiorJs/EdtiorJs';
 
 const DragSvg = () => (
   <svg className="icon" viewBox="0 0 1170 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
@@ -167,6 +169,10 @@ interface ModelEditorState {
   flowOption: {
     data: any;
   };
+  viewOption: {
+    ext: string;
+    data: any;
+  }
 }
 
 export class Editor extends React.Component<ModelEditorProps, ModelEditorState> {
@@ -182,6 +188,11 @@ export class Editor extends React.Component<ModelEditorProps, ModelEditorState> 
     this.state = {
       visible: false,
       tree: [],
+      createModal: {
+        visible: false,
+        type: '',
+        dir: '',
+      },
       currentType: 'none',
       flowOption: {
         data: {
@@ -219,17 +230,25 @@ export class Editor extends React.Component<ModelEditorProps, ModelEditorState> 
           ],
         }
       },
-      createModal: {
-        visible: false,
-        type: '',
-        dir: '',
-      }
+      viewOption: {
+        ext: 'none',
+        data: undefined,
+      },
     };
     console.log(this.props);
   }
 
   nzDblClick($event: NzFormatEmitEvent) {
-    $event.node.isExpanded = !$event.node.isExpanded;
+    if(!$event.node.isLeaf){
+      $event.node.isExpanded = !$event.node.isExpanded;
+    }else{
+      this.setState({
+        viewOption: {
+          ext: $event.node.origin.ext,
+          data: JSON.parse(fs.readFileSync($event.node.origin.path).toString() || '{"nodes": [], "edges":[]}')
+        }
+      })
+    }
   }
 
   addMind() {
@@ -261,11 +280,10 @@ export class Editor extends React.Component<ModelEditorProps, ModelEditorState> 
   }
 
   getContextMenu(type): JSX.Element {
-    console.log(type);
     return (
       <Menu style={{ minWidth: '150px' }}>
         <Menu.SubMenu title="新建">
-          <Menu.Item icon={<DragIcon/>} onClick={this.addMind.bind(this)}>脑图</Menu.Item>
+          <Menu.Item icon={<DragIcon/>} onClick={this.addMind.bind(this, '.mindmap')}>数据库设计</Menu.Item>
           <Menu.Item icon={<FolderFilled/>} onClick={this.addFolder.bind(this)}>文件夹</Menu.Item>
         </Menu.SubMenu>
         <Menu.Item key="2" disabled={true}>上传</Menu.Item>
@@ -274,10 +292,6 @@ export class Editor extends React.Component<ModelEditorProps, ModelEditorState> 
         <Menu.Item key="5" disabled={true}>粘贴</Menu.Item>
       </Menu>
     );
-  }
-
-  visibleChange(visible: boolean) {
-    this.setState({ visible: visible });
   }
 
   showContextMenu($event: MouseEvent) {
@@ -307,7 +321,13 @@ export class Editor extends React.Component<ModelEditorProps, ModelEditorState> 
   }
 
   createModal_onCancel() {
-
+    this.setState({
+      createModal: {
+        visible: false,
+        type: 'mind',
+        dir: '',
+      }
+    });
   }
 
   checkFileName({ getFieldValue }) {
@@ -350,7 +370,7 @@ export class Editor extends React.Component<ModelEditorProps, ModelEditorState> 
                   nzClick={this.selectNode.bind(this)}/>
           </div>
         </Dropdown>
-        <GGEditor>
+        <GGEditor style={{display: this.state.viewOption.ext === '.mindmap' ? 'block' : 'none'}}>
           <Flow
             className={styles.graph}
             data={data}

@@ -8,33 +8,16 @@ import { FileNode as _FileNode } from '../interface';
 import { forEachTree } from '../utils/tree';
 import { FileNameCompare } from '../utils/file-name-compare';
 
-export interface FileNode {
-  key: string;
-  title: string;
-  ext: string;
-}
-
 const initialState: {
-  fileMap: { [index: string]: FileNode },
   fileTree: _FileNode[]
-} = { fileMap: {}, fileTree: [] };
+} = { fileTree: [] };
 
 export const reloadFile = createAsyncThunk(
   'file/reloadFileStatus',
   async () => {
     const defaultPath = path.join(await getAppPath(), 'default');
     const fileTree = await getDefaultFileTree(defaultPath);
-    const files = await getDefaultFiles();
-    const fileMap = {};
-    files.map((file) => {
-      const fileNode: FileNode = {
-        key: file,
-        title: path.basename(file),
-        ext: path.extname(file),
-      };
-      fileMap[file] = fileNode;
-    });
-    return { fileMap, fileTree };
+    return { fileTree };
   }
 );
 
@@ -100,8 +83,7 @@ const fileSlice = createSlice({
   extraReducers: {
     // @ts-ignore
     [reloadFile.fulfilled]: (state, action) => {
-      const { fileMap, fileTree } = action.payload;
-      state.fileMap = fileMap;
+      const { fileTree } = action.payload;
       state.fileTree = fileTree;
     },
     // @ts-ignore
@@ -113,7 +95,7 @@ const fileSlice = createSlice({
         deepFileTree.children.sort(sort);
       } else {
         forEachTree(deepFileTree, (node: _FileNode) => {
-          console.log('folder:', node.key, path.dirname(fileNode.key))
+          console.log('folder:', node.key, path.dirname(fileNode.key));
           if (node.key === path.dirname(fileNode.key)) {
             node.children.push(fileNode);
             node.children.sort(sort);
@@ -131,7 +113,7 @@ const fileSlice = createSlice({
         deepFileTree.children.sort(sort);
       } else {
         forEachTree(deepFileTree, (node: _FileNode) => {
-          console.log('folder:', node.key, path.dirname(fileNode.key))
+          console.log('folder:', node.key, path.dirname(fileNode.key));
           if (node.key === path.dirname(fileNode.key)) {
             node.children.push(fileNode);
             node.children.sort(sort);
@@ -148,6 +130,7 @@ const fileSlice = createSlice({
 export default fileSlice.reducer;
 
 export const fileCount = (state: RootState) => state.file;
+
 function sort(item1: _FileNode, item2: _FileNode): number {
   if (item1.isDirectory === item2.isDirectory) { // 如果一样就对比名称
     return FileNameCompare(item1.title, item2.title);

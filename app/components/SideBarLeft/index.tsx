@@ -4,6 +4,7 @@ import { Modal } from 'antd';
 import {
   FolderOutlined,
   SmileOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { getProject } from '../../features/project';
 import styles from './SideBarLeft.less';
@@ -11,6 +12,9 @@ import { Link } from 'react-router-dom';
 import routes from '../../constants/routes.json';
 
 interface SideBarLeftProps {
+  showType: 'file_panel' | 'drag_panel',
+
+  onShowTypeChange?(type: 'file_panel' | 'drag_panel'): void;
 }
 
 interface SideBarLeftState {
@@ -27,28 +31,36 @@ export class SideBarLeft extends React.Component<SideBarLeftProps, SideBarLeftSt
 
   async componentDidMount() {
     const projects = await getProject();
-    console.log(projects);
+  }
+
+  showTypeChange(type) {
+    this.props.onShowTypeChange && this.props.onShowTypeChange(type);
   }
 
   render() {
     return (
       <div className={styles.SideBarLeft}>
         <div className={styles.logo}>
-          <SmileOutlined />
+          <SmileOutlined/>
         </div>
         <div className={styles.item}>
-          <Link to={routes.EDITOR}>
-            <FolderOutlined />
-          </Link>
+          <a onClick={this.showTypeChange.bind(this, 'file_panel')}
+             style={{ color: this.props.showType === 'file_panel' ? '#fff' : '' }}>
+            <FolderOutlined/>
+          </a>
+        </div>
+        <div className={styles.item}>
+          <a onClick={this.showTypeChange.bind(this, 'drag_panel')}
+             style={{ color: this.props.showType === 'drag_panel' ? '#fff' : '' }}>
+            <FolderOutlined/>
+          </a>
         </div>
         <div className={styles.divider}></div>
         <div className={styles.item}>
-          <Link to={routes.COUNTER}>
-            <FolderOutlined />
-          </Link>
+          <a>
+            <SettingOutlined />
+          </a>
         </div>
-        <div className={styles.divider}></div>
-        <div className={styles.item}></div>
       </div>
     );
   }
