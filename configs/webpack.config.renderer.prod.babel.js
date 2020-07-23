@@ -134,6 +134,9 @@ export default merge.smart(baseConfig, {
             loader: 'less-loader',
             options: {
               sourceMap: true,
+              lessOptions: {
+                javascriptEnabled: true,
+              },
             },
           },
         ],
@@ -159,6 +162,9 @@ export default merge.smart(baseConfig, {
             loader: 'less-loader',
             options: {
               sourceMap: true,
+              lessOptions: {
+                javascriptEnabled: true,
+              },
             },
           },
         ],
