@@ -1,9 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Modal } from 'antd';
-import { Graph } from 'gg-editor/lib/common/interfaces';
-import { withEditorContext, constants } from 'gg-editor';
+import { Modal, Table } from 'antd';
+import { Graph, Node } from 'gg-editor/lib/common/interfaces';
+import { withEditorContext, constants, Util } from 'gg-editor';
 import CommandManager from 'gg-editor/lib/common/CommandManager';
+import { BizTableNodeModel } from '../../../../interface';
 
 const { GraphNodeEvent } = constants;
 
@@ -26,29 +27,68 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
     const { graph } = this.props;
 
     graph.on(GraphNodeEvent.onNodeDoubleClick, (e) => {
-      console.log(e.target.get('model'));
+      console.log(e.currentTarget.get('model'));
       console.log('打开', e);
-      this.showEditableLabel();
+      const node = Util.getSelectedNodes(graph)[0];
+      if (!node) {
+        return;
+      }
+      this.showEditableLabel(node);
     });
   }
 
-  showEditableLabel = () => {
+  showEditableLabel = (node: Node) => {
+    const model = node.getModel();
     this.setState(
       {
         visible: true,
       });
   };
 
+  onOk() {
+    this.setState(
+      {
+        visible: false,
+      });
+  }
+
+  onCancel() {
+    this.setState(
+      {
+        visible: false,
+      });
+  }
+
   render() {
     const { graph } = this.props;
+    const node = Util.getSelectedNodes(graph)[0];
+    if (!node) {
+      return null;
+    }
+    const model: BizTableNodeModel = node.getModel() as BizTableNodeModel;
     return ReactDOM.createPortal(
       <Modal
         title="Basic Modal"
         visible={this.state.visible}
+        onOk={this.onOk.bind(this)}
+        onCancel={this.onCancel.bind(this)}
       >
-        <p>Some contents...</p>
-        <p>Some contents...</p>
-        <p>Some contents...</p>
+        <label>Table</label>
+        <input/>
+        <div className="ant-table ant-table-small">
+          <table>
+            <tbody className="ant-table-tbody">
+            {model.attrs.map((attr) => {
+              return <tr key={attr.name} className="ant-table-row ant-table-row-level-0">
+                <td>{attr.name}</td>
+                <td></td>
+                <td></td>
+              </tr>;
+            })}
+            </tbody>
+          </table>
+        </div>
+        {/*<Table columns={columns} dataSource={model.attrs}/>*/}
       </Modal>,
       graph.get('container'),
     );

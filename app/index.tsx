@@ -6,6 +6,7 @@ import { history, configuredStore } from './store';
 import {reloadFile} from './features/fileSlice';
 import './app.global.less';
 import './component.global.less';
+import './components/gg-editor'
 
 const store = configuredStore();
 

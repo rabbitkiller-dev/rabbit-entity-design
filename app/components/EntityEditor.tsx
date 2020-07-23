@@ -35,7 +35,8 @@ export default function EntityEditor(props: ModelEditorProps) {
   const [showFileExt, setShowFileExt] = useState<string>(null);
   function onShowFile(node: FileNode){
     console.log('onShowFile', node);
-    setShowFile(node.path)
+    setShowFile(node.path);
+    setShowFileExt(node.ext);
   }
   return (
     <div className={styles.entity_editor}>
@@ -51,8 +52,11 @@ export default function EntityEditor(props: ModelEditorProps) {
           }
         </div>
         <div className={styles.ed_right_view} style={{width: 'calc(100% - 300px)'}}>
-          {showFileExt === '.uml' &&
-          <EntityUMLEditor filePath={showFile}/>
+          {showFileExt === '.datasource' &&
+            <EntityUMLEditor filePath={showFile}/>
+          }
+          {showFileExt === '.mindmap' &&
+            <EntityUMLEditor filePath={showFile}/>
           }
         </div>
       </div>

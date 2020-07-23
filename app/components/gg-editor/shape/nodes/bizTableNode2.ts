@@ -9,43 +9,20 @@ import {
 } from 'gg-editor/lib/common/interfaces';
 import { setAnchorPointsState, constants } from 'gg-editor';
 import { optimizeMultilineText } from '../utils';
-import { BizTableNodeModel } from '../../../../interface';
-
-function textMetrics(el, style?: { [key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key] }) {
-  let h = 0;
-  let w = 0;
-  let ruleText: HTMLDivElement = (textMetrics as any).ruleText;
-  if (!ruleText) {
-    ruleText = (textMetrics as any).ruleText = document.createElement('div');
-    document.body.appendChild(ruleText);
-    ruleText.style.position = 'absolute';
-    ruleText.style.left = '-1000';
-    ruleText.style.top = '-1000';
-  }
-  ruleText.innerText = el;
-  var styles = ['font-size', 'font-style', 'font-weight', 'font-family', 'line-height', 'text-transform', 'letter-spacing'];
-  Object.assign(ruleText.style, style || {});
-  h = ruleText.offsetHeight;
-  w = ruleText.offsetWidth;
-  let ret = {
-    height: h,
-    width: w
-  };
-
-  return ret;
-}
 
 const { ItemState } = constants;
 // 窗口内边距
-const WRAPPER_HORIZONTAL_PADDING = 20;
+const WRAPPER_HORIZONTAL_PADDING = 4;
 // 头部高度
-const TABLE_HEAD_HEIGHT = 40;
-// 头部高度
-const TABLE_ATTR_HEIGHT = 20;
+const TABLE_HEAD_HEIGHT = 16;
 
 const WRAPPER_CLASS_NAME = 'table-wrapper';
 const TABLE_HEAD_CLASS_NAME = 'table-head';
 
+interface BizTableNodeModel extends NodeModel {
+  tableName: string;
+  attrs: Array<{ name: string }>;
+}
 
 const bizNode: CustomNode = {
   options: {
@@ -53,11 +30,11 @@ const bizNode: CustomNode = {
     wrapperStyle: {
       radius: 5,
       lineWidth: 1,
-      fill: '#24313c',
+      fill: '#1f2324',
       stroke: 'transparent'
     },
     headStyle: {
-      fill: 'rgba(255, 255, 255, 0.65)',
+      fill: '#aaa',
       textAlign: 'center',
       textBaseline: 'middle'
     },
@@ -68,7 +45,8 @@ const bizNode: CustomNode = {
       } as any,
       [ItemState.Selected]: {
         wrapperStyle: {
-          stroke: '#283540'
+          fill: '#242829',
+          stroke: '#525657'
         },
         headStyle: {}
       } as any
@@ -98,10 +76,9 @@ const bizNode: CustomNode = {
         y: 0,
         width,
         height:
-          WRAPPER_HORIZONTAL_PADDING +
-          WRAPPER_HORIZONTAL_PADDING +
-          TABLE_HEAD_HEIGHT +
-          TABLE_ATTR_HEIGHT * model.attrs.length,
+          WRAPPER_HORIZONTAL_PADDING * 2 +
+          TABLE_HEAD_HEIGHT * (model.attrs.length + 1) +
+          4,
         ...wrapperStyle
       }
     });
@@ -112,26 +89,17 @@ const bizNode: CustomNode = {
   drawTableHead(model: NodeModel, group: GGroup) {
     const [width] = this.getBoxSize(model);
     const { headStyle } = this.getOptions(model);
+
     const tableHeadLabel = group.addShape('text', {
       className: TABLE_HEAD_CLASS_NAME,
       draggable: true,
       attrs: {
         text: model.tableName,
         x: width / 2,
-        y: (TABLE_HEAD_HEIGHT / 2) + (WRAPPER_HORIZONTAL_PADDING / 2),
+        y: TABLE_HEAD_HEIGHT / 2 + WRAPPER_HORIZONTAL_PADDING,
         width,
         height: TABLE_HEAD_HEIGHT,
         ...headStyle
-      }
-    });
-    group.addShape('rect', {
-      draggable: true,
-      attrs: {
-        x: WRAPPER_HORIZONTAL_PADDING,
-        y: TABLE_HEAD_HEIGHT + (WRAPPER_HORIZONTAL_PADDING / 2),
-        width: width - WRAPPER_HORIZONTAL_PADDING * 2,
-        height: 1,
-        fill: 'rgba(255, 255, 255, 0.65)',
       }
     });
 
@@ -140,33 +108,22 @@ const bizNode: CustomNode = {
 
   drawTableAttr(model: BizTableNodeModel, group: GGroup) {
     const [width] = this.getBoxSize(model);
-    const startY = TABLE_HEAD_HEIGHT + (WRAPPER_HORIZONTAL_PADDING / 2) + 10;
     model.attrs.map((attr, index) => {
-      group.addShape('circle', {
-        className: TABLE_HEAD_CLASS_NAME,
-        draggable: true,
-        attrs: {
-          x: WRAPPER_HORIZONTAL_PADDING,
-          y:
-            startY +
-            TABLE_ATTR_HEIGHT * index + TABLE_ATTR_HEIGHT / 2,
-          r: 2,
-          fill: 'rgba(255, 255, 255, 0.65)',
-          textBaseline: 'middle'
-        }
-      });
       const tableHead = group.addShape('text', {
         className: TABLE_HEAD_CLASS_NAME,
         draggable: true,
         attrs: {
           text: attr.name,
-          x: WRAPPER_HORIZONTAL_PADDING + 10,
+          x: WRAPPER_HORIZONTAL_PADDING,
           y:
-            startY +
-            TABLE_ATTR_HEIGHT * index + TABLE_ATTR_HEIGHT / 2,
+            WRAPPER_HORIZONTAL_PADDING +
+            TABLE_HEAD_HEIGHT +
+            WRAPPER_HORIZONTAL_PADDING +
+            TABLE_HEAD_HEIGHT * index +
+            TABLE_HEAD_HEIGHT / 2,
           width: width - WRAPPER_HORIZONTAL_PADDING * 2,
           height: TABLE_HEAD_HEIGHT,
-          fill: 'rgba(255, 255, 255, 0.65)',
+          fill: '#777',
           textBaseline: 'middle'
         }
       });
@@ -209,7 +166,7 @@ const bizNode: CustomNode = {
     const model = item.getModel();
     const states = item.getStates() as constants.ItemState[];
 
-    [WRAPPER_CLASS_NAME].forEach(className => {
+    [WRAPPER_CLASS_NAME, TABLE_HEAD_CLASS_NAME].forEach(className => {
       const shape = group.findByClassName(className);
       const options = this.getOptions(model);
 
@@ -258,22 +215,13 @@ const bizNode: CustomNode = {
     }
   },
 
-  getBoxSize(model: BizTableNodeModel): number[] {
-    let { size } = this.getOptions(model);
-    const fontStyle = { fontSize: '12px', fontFamily: 'sans-serif' };
-    const fontMaxWidth = Math.max(
-      textMetrics(model.tableName, fontStyle).width,
-      ...model.attrs.map((attr) => textMetrics(attr.name, fontStyle).width)
-    ) + WRAPPER_HORIZONTAL_PADDING * 2;
+  getBoxSize(model: NodeModel): number[] {
+    const { size } = this.getOptions(model);
+
     if (!isArray(size)) {
-      if (size < fontMaxWidth) {
-        return [fontMaxWidth, fontMaxWidth];
-      }
       return [size, size];
     }
-    if (size[0] < fontMaxWidth) {
-      return [fontMaxWidth, fontMaxWidth];
-    }
+
     return size;
   },
 
@@ -294,4 +242,4 @@ const bizNode: CustomNode = {
   }
 };
 
-G6.registerNode('bizTableNode', bizNode);
+G6.registerNode('bizTableNode2', bizNode);
