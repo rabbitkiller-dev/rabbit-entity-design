@@ -1,5 +1,5 @@
-import os from 'os';
-import fs from 'fs';
+const os = require('electron').remote.require('os');
+const fs = require('electron').remote.require('fs');
 import path from 'path';
 import { FileNode as _FileNode, FileNode } from '../interface';
 import { FileNameCompare } from '../utils/file-name-compare';

@@ -174,36 +174,6 @@ const bizNode: CustomNode = {
     });
   },
 
-  setLabelText(model: NodeModel, group: GGroup) {
-    const shape = group.findByClassName(TABLE_HEAD_CLASS_NAME);
-
-    if (!shape) {
-      return;
-    }
-
-    const [width] = this.getBoxSize(model);
-    const { fontStyle, fontWeight, fontSize, fontFamily } = shape.attr();
-
-    const text = model.label as string;
-    const font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
-
-    shape.attr(
-      'text',
-      optimizeMultilineText(
-        text,
-        font,
-        2,
-        width - WRAPPER_HORIZONTAL_PADDING * 2
-      )
-    );
-  },
-
-  update(model, item) {
-    const group = item.getContainer();
-
-    this.setLabelText(model, group);
-  },
-
   setState(name, value, item) {
     const group = item.getContainer();
     const model = item.getModel();

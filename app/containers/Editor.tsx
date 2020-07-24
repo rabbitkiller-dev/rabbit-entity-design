@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch, createDispatchHook, connect } from 'react-redux';
 import GGEditor, { Flow } from 'gg-editor';
-import fs from 'fs';
+const fs = require('electron').remote.require('fs');
 import path from 'path';
 import styles from './Editor.less';
 import { Tree } from '../components/Tree';

@@ -1,3 +1,4 @@
+import { shell } from 'electron';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { FolderFilled } from '@ant-design/icons';
@@ -10,9 +11,7 @@ import DataSourceIcon from '../icons/DataSourceIcon';
 import { Dropdown, Form, Input, Menu, Modal } from 'antd';
 import { TreeNodeModel } from '../Tree/tree-node.model';
 import { NzFormatEmitEvent } from '../Tree/interface';
-import fs from 'fs';
 import path from 'path';
-import GGEditor from 'gg-editor';
 import { checkFileExists, checkFileName } from '../../features/project';
 import { createFile, createFolder } from '../../features/fileSlice';
 
@@ -54,6 +53,17 @@ export default function FilePanel(props: FilePanelProps) {
       dir = currentNode.isLeaf ? path.dirname(currentNode.key) : currentNode.key;
     }
     setNewFileDialog({ type: type, dir: dir });
+  }
+
+  /**
+   * 打开文件所在位置
+   */
+  function openExplorer() {
+    if(currentNode){
+      const fileNode: FileNode = currentNode.origin;
+      shell.showItemInFolder(fileNode.path)
+    }
+
   }
 
   /**
@@ -112,10 +122,10 @@ export default function FilePanel(props: FilePanelProps) {
         <Menu.Item icon={<DataSourceIcon/>} onClick={() => openNewFile('.datasource')}>数据库</Menu.Item>
         <Menu.Item icon={<FolderFilled/>} onClick={() => openNewFile('folder')}>文件夹</Menu.Item>
       </Menu.SubMenu>
-      <Menu.Item key="2" disabled={true}>上传</Menu.Item>
       <Menu.Item key="3" disabled={true}>重命名</Menu.Item>
       <Menu.Item key="4" disabled={true}>复制</Menu.Item>
       <Menu.Item key="5" disabled={true}>粘贴</Menu.Item>
+      <Menu.Item onClick={() => openExplorer()}>打开文件所在位置</Menu.Item>
     </Menu>} trigger={['contextMenu']}>
       <div>
         <Tree data={fileTree} nzDblClick={tree_nzDblClick} nzClick={tree_nzClick}/>

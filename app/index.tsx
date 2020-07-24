@@ -11,7 +11,7 @@ import './components/gg-editor'
 const store = configuredStore();
 
 const AppContainer = process.env.PLAIN_HMR ? Fragment : ReactHotAppContainer;
-store.dispatch(reloadFile());
+store.dispatch(reloadFile() as any);
 document.addEventListener('DOMContentLoaded', () =>
   render(
     <AppContainer>

@@ -71,7 +71,8 @@ const createWindow = async () => {
         // devTools: false,
           }
         : {
-            preload: path.join(__dirname, 'dist/renderer.prod.js'),
+            // preload: path.join(__dirname, 'dist/renderer.prod.js'),
+          nodeIntegration: true,
           },
   });
 

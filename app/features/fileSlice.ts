@@ -1,9 +1,9 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+const fs = require('electron').remote.require('fs');
+import path from 'path';
 // eslint-disable-next-line import/no-cycle
 import { AppThunk, RootState } from '../store';
 import { filepathIntoKey, getAppPath, getDefaultFiles, getDefaultFileTree } from './project';
-import fs from 'fs';
-import path from 'path';
 import { FileNode as _FileNode } from '../interface';
 import { forEachTree } from '../utils/tree';
 import { FileNameCompare } from '../utils/file-name-compare';
@@ -24,7 +24,6 @@ export const reloadFile = createAsyncThunk(
 export const createFile = createAsyncThunk(
   'file/createFileStatus',
   async (filepath: string) => {
-    console.log(filepath);
     filepath = path.join(await getAppPath(), 'default', filepath);
     fs.writeFileSync(filepath, '');
     return {

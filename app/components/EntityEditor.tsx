@@ -20,6 +20,7 @@ import { SideBarLeft } from './SideBarLeft';
 import FilePanel from './FilePanel';
 import DragPanel from './DragPanel';
 import EntityUMLEditor from './EntityUMLEditor';
+import MindmapEditor from './MindmapEditor';
 
 interface FileTree extends FileNode {
   icon: JSX.Element;
@@ -56,7 +57,7 @@ export default function EntityEditor(props: ModelEditorProps) {
             <EntityUMLEditor filePath={showFile}/>
           }
           {showFileExt === '.mindmap' &&
-            <EntityUMLEditor filePath={showFile}/>
+            <MindmapEditor filePath={showFile}/>
           }
         </div>
       </div>

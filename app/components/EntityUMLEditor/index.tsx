@@ -5,10 +5,14 @@ import { FolderFilled } from '@ant-design/icons';
 import { Divider, Dropdown, Menu, Tooltip } from 'antd';
 import { createFromIconfontCN } from '@ant-design/icons';
 import GGEditor, { Flow, ContextMenu, constants, Command } from 'gg-editor';
+
+// const fs = require('electron').remote.require('fs');
 import fs from 'fs';
 import styles from '../../containers/Editor.less';
 import { ModifyTable } from '../gg-editor';
-const { EditorCommand } = constants;
+import { Graph } from 'gg-editor/lib/common/interfaces';
+
+const { EditorCommand, GraphCustomEvent } = constants;
 const FLOW_COMMAND_LIST = [
   EditorCommand.Undo,
   EditorCommand.Redo,
@@ -23,9 +27,11 @@ const FLOW_COMMAND_LIST = [
 const IconFont = createFromIconfontCN({
   scriptUrl: 'https://at.alicdn.com/t/font_1518433_oa5sw7ezue.js',
 });
+
 interface EntityUMLEditorProps {
   filePath: string;
 }
+
 const data2 = {
   nodes: [
     {
@@ -70,28 +76,36 @@ const data2 = {
   //   { id: 'combo3', label: 'Combo 3', collapsed: true },
   // ],
 };
+let setTimeoutID;
 export default function EntityUMLEditor(props: EntityUMLEditorProps) {
   if (!props.filePath) {
     return null;
   }
   const file = fs.readFileSync(props.filePath);
-  console.log(props.filePath, file);
   let data: any = data2;
   if (file.toString()) {
     data = JSON.parse(file.toString());
   }
+
+  function save(data: any) {
+    clearTimeout(setTimeoutID);
+    setTimeoutID = setTimeout(() => {
+      fs.writeFileSync(props.filePath, JSON.stringify(data));
+    }, 100);
+  }
+
   return (
     <GGEditor>
       <div className={styles.toolbar}>
         {FLOW_COMMAND_LIST.map((name, index) => {
           if (name === '|') {
-            return <Divider key={index} type="vertical" />;
+            return <Divider key={index} type="vertical"/>;
           }
 
           return (
             <Command key={name} name={name} className={styles.command} disabledClassName={styles.commandDisabled}>
               <Tooltip title={upperFirst(name)}>
-                <IconFont type={`icon-${name}`} />
+                <IconFont type={`icon-${name}`}/>
               </Tooltip>
             </Command>
           );
@@ -109,12 +123,20 @@ export default function EntityUMLEditor(props: EntityUMLEditorProps) {
             }
           },
         }}
-        customModes={(mode, behaviors)=> {
-          behaviors['drag-combo'] = 'drag-combo'
+        customModes={(mode, behaviors) => {
+          behaviors['drag-combo'] = 'drag-combo';
           return behaviors;
         }}
+        ref={component => {
+          if (component) {
+            const graph: Graph = component.graph;
+            graph.on(GraphCustomEvent.onAfterUpdateItem, ($event) => {
+              save(graph.save());
+            });
+          }
+        }}
       />
-      <ModifyTable />
+      <ModifyTable/>
     </GGEditor>
   );
 }
