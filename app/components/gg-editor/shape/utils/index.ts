@@ -115,3 +115,27 @@ export function optimizeMultilineText(text: string, font: string, maxRows: numbe
 
   return multilineText.join('\n');
 }
+
+export function textMetrics(el, style: { [key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key] } = { fontSize: '12px', fontFamily: 'sans-serif' }) {
+  let h = 0;
+  let w = 0;
+  let ruleText: HTMLDivElement = (textMetrics as any).ruleText;
+  if (!ruleText) {
+    ruleText = (textMetrics as any).ruleText = document.createElement('div');
+    document.body.appendChild(ruleText);
+    ruleText.style.position = 'absolute';
+    ruleText.style.left = '-1000';
+    ruleText.style.top = '-1000';
+  }
+  ruleText.innerText = el;
+  var styles = ['font-size', 'font-style', 'font-weight', 'font-family', 'line-height', 'text-transform', 'letter-spacing'];
+  Object.assign(ruleText.style, style || {});
+  h = ruleText.offsetHeight;
+  w = ruleText.offsetWidth;
+  let ret = {
+    height: h,
+    width: w
+  };
+
+  return ret;
+}

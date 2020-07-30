@@ -79,16 +79,6 @@ export default function MindmapEditor(props: EntityUMLEditorProps) {
         data={data}
         graphConfig={{
           // renderer: 'svg',
-          defaultCombo: {
-            type: 'cCircle',
-            labelCfg: {
-              refY: 2
-            }
-          },
-        }}
-        customModes={(mode, behaviors)=> {
-          behaviors['drag-combo'] = 'drag-combo'
-          return behaviors;
         }}
       />
       <ModifyTable />
