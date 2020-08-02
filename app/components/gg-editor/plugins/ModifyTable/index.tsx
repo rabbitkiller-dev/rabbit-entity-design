@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { Input, Modal, Table, Form, Row, Col, Tabs, Collapse } from 'antd';
 import {
@@ -13,6 +13,9 @@ import { withEditorContext, constants, Util } from 'gg-editor';
 import CommandManager from 'gg-editor/lib/common/CommandManager';
 import { BizTableAttrModel, BizTableNodeModel } from '../../../../interface';
 import styles from './index.less';
+import { Stream, Tokenizer } from '../../../../utils/sql-parser';
+import { Token } from '../../../../utils/sql-parser/Tokenizer';
+import rangy from 'rangy/lib/rangy-selectionsaverestore';
 
 interface TableModel extends BizTableNodeModel {
   attrs: AttrModel[]
@@ -171,8 +174,6 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
 
   onOk() {
     const { executeCommand } = this.props;
-    console.log(executeCommand);
-    console.log(this.state.model);
     executeCommand('update', {
       id: this.state.model.id,
       updateModel: {
@@ -308,8 +309,8 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
                               </Col>
                               <Col span={8}>
                                 <Form.Item label="Type:">
-                                  <Input value={attr.type}
-                                         onChange={($event) => this.attrModify(attr, 'type', $event.target.value)}/>
+                                  <SqlAttrInput value={attr.type}
+                                                onChange={($event) => this.attrModify(attr, 'type', $event)}/>
                                 </Form.Item>
                               </Col>
                               <Col span={8}>
@@ -327,8 +328,10 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
                           'ant-table-row-level-0': true,
                           [styles.selection]: attr.id === this.state.select
                         })} onClick={() => this.clickAttrRow(attr)} onDoubleClick={() => this.dbClickAttrRow(attr)}>
-                          <td className={styles.column}>{attr.name}</td>
-                          <td className={styles.column}>{attr.type}</td>
+                          <td className={styles.column}><div>{attr.name}</div></td>
+                          <td className={styles.column}>
+                            <SqlAttrInput value={attr.type} readonly={true} onDoubleClick={() => this.dbClickAttrRow(attr)}/>
+                          </td>
                           <td className={styles.column}>/*{attr.comment}*/</td>
                         </tr>;
                       }
@@ -394,3 +397,141 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
 }
 
 export default withEditorContext<ModifyTableProps>(ModifyTable);
+
+interface SqlAttrInputProp {
+  value?: string;
+  readonly?: boolean;
+
+  onChange?(value: string): void
+  onDoubleClick?($event: MouseEvent): void
+}
+
+let savedSel;
+
+function SqlAttrInput(prop: SqlAttrInputProp) {
+  const inputEl = useRef<HTMLDivElement>(null);
+  const tokens = (prop.value && prop.value.trim()) ? toTokens(prop.value) : [];
+  const htmls = tokens.map((token) => {
+    return `<span class="${styles[token.type]}" spellcheck="false">${token.value}</span>`;
+  });
+  useEffect(() => {
+    if(!prop.readonly){
+      inputEl.current.contentEditable = 'true';
+    }
+    inputEl.current.innerHTML = htmls.join('');
+    if (savedSel && !prop.readonly) {
+      setCaretPosition(inputEl.current, savedSel);
+    }
+
+    function onInput($event) {
+      console.log('input', $event);
+      savedSel = getCaretCharacterOffsetWithin(inputEl.current);
+      prop.onChange(inputEl.current.innerText);
+    }
+
+    function onMouseDown($event){
+    }
+    function onDoubleClick($event){
+      prop.onDoubleClick($event);
+    }
+    inputEl.current.addEventListener('input', onInput);
+    inputEl.current.addEventListener('mousedown', onMouseDown);
+    inputEl.current.addEventListener('dblclick', onDoubleClick);
+    // inputEl.current.addEventListener('keydown', ($event) => {
+    //   // console.log('keydown', $event);
+    // });
+    // inputEl.current.addEventListener('keyup', ($event) => {
+    //   // console.log('keyup', $event);
+    // });
+    return () => {
+      inputEl.current.removeEventListener('input', onInput);
+      inputEl.current.removeEventListener('mousedown', onMouseDown);
+      inputEl.current.removeEventListener('dblclick', onDoubleClick);
+    };
+  });
+  return (
+    <div className={classNames({
+      [styles.SqlAttrInput]: true,
+      'ant-input': !prop.readonly,
+      'ant-input-sm': !prop.readonly,
+    })} ref={inputEl}/>
+  );
+}
+
+function toTokens(script: string): Token[] {
+  const stream = new Stream(script);
+  const tokenizer = new Tokenizer(stream);
+  const result = [tokenizer.getCurrentToken()];
+  while (!tokenizer.eof()) {
+    const token = tokenizer.getNextToken();
+    if (token) {
+      result.push(token);
+    }
+  }
+  return result;
+}
+
+/**
+ * 获取光标位置
+ */
+
+function getCaretCharacterOffsetWithin(element) {
+  var caretOffset = 0;
+  var doc = element.ownerDocument || element.document;
+  var win = doc.defaultView || doc.parentWindow;
+  var sel;
+  if (typeof win.getSelection != 'undefined') {
+    sel = win.getSelection();
+    if (sel.rangeCount > 0) {
+      var range = win.getSelection().getRangeAt(0);
+      var preCaretRange = range.cloneRange();
+      preCaretRange.selectNodeContents(element);
+      preCaretRange.setEnd(range.endContainer, range.endOffset);
+      caretOffset = preCaretRange.toString().length;
+    }
+  } else if ((sel = doc.selection) && sel.type != 'Control') {
+    var textRange = sel.createRange();
+    var preCaretTextRange = doc.body.createTextRange();
+    preCaretTextRange.moveToElementText(element);
+    preCaretTextRange.setEndPoint('EndToEnd', textRange);
+    caretOffset = preCaretTextRange.text.length;
+  }
+  return caretOffset;
+}
+
+function setCaretPosition(element, offset) {
+  var range = document.createRange();
+  var sel = window.getSelection();
+
+  //select appropriate node
+  var currentNode = null;
+  var previousNode = null;
+
+  for (var i = 0; i < element.childNodes.length; i++) {
+    //save previous node
+    previousNode = currentNode;
+
+    //get current node
+    currentNode = element.childNodes[i];
+    //if we get span or something else then we should get child node
+    while (currentNode.childNodes.length > 0) {
+      currentNode = currentNode.childNodes[0];
+    }
+
+    //calc offset in current node
+    if (previousNode != null) {
+      offset -= previousNode.length;
+    }
+    //check whether current node has enough length
+    if (offset <= currentNode.length) {
+      break;
+    }
+  }
+  //move caret to specified offset
+  if (currentNode != null) {
+    range.setStart(currentNode, offset);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
