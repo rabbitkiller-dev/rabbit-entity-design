@@ -127,7 +127,7 @@ export default function FilePanel(props: FilePanelProps) {
       <Menu.Item key="5" disabled={true}>粘贴</Menu.Item>
       <Menu.Item onClick={() => openExplorer()}>打开文件所在位置</Menu.Item>
     </Menu>} trigger={['contextMenu']}>
-      <div>
+      <div style={{height: '100%'}}>
         <Tree data={fileTree} nzDblClick={tree_nzDblClick} nzClick={tree_nzClick}/>
         <Modal
           title="新建"

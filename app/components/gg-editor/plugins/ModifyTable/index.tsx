@@ -6,6 +6,7 @@ import {
   MinusOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
+  CommentOutlined,
 } from '@ant-design/icons';
 import classNames from 'classnames';
 import { Graph, Node } from 'gg-editor/lib/common/interfaces';
@@ -40,6 +41,10 @@ interface ModifyTableState {
   select: string;
   sqlScript: string;
   model: TableModel;
+  commentDialog: {
+    visible: boolean,
+    attr: AttrModel,
+  }
 }
 
 interface Action {
@@ -106,9 +111,14 @@ class AttrModifyAction implements Action {
     if (!modify) {
       return undefined;
     }
+    // ALTER TABLE auth_role_staff MODIFY userId INT NOT NULL AUTO_INCREMENT DEFAULT asd COMMENT '人员IDaaa';
+    // CREATE UNIQUE INDEX auth_role_staff_userId_uindex ON auth_role_staff (userId);
+    // ALTER TABLE auth_role_staff DROP PRIMARY KEY;
+    // ALTER TABLE auth_role_staff ADD PRIMARY KEY (userId);
     let script = `ALTER TABLE ${table.tableName} MODIFY ${this.attr.name} ${this.attr.type}`;
-    if (this.attr.default && (this.attr.default !== this.origin.default)) script += ` DEFAULT ${this.attr.default}`;
     if (this.attr.notNull !== this.origin.notNull) script += this.attr.notNull ? ' NOT NULL' : ' NULL';
+    if (this.attr.default && (this.attr.default !== this.origin.default)) script += ` DEFAULT ${this.attr.default}`;
+    if (this.attr.comment && (this.attr.comment !== this.origin.comment)) script += ` COMMENT '${this.attr.comment}'`;
     return script + ';';
   }
 }
@@ -142,6 +152,10 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
     select: undefined,
     sqlScript: undefined,
     model: undefined,
+    commentDialog: {
+      visible: false,
+      attr: undefined,
+    }
   };
   actions: Action[] = [];
 
@@ -264,133 +278,171 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
     });
   }
 
+  openCommentDialog(attr: AttrModel){
+    this.setState({
+      commentDialog: {
+        visible: true,
+        attr: attr,
+      }
+    });
+  }
+
   render() {
     const { graph } = this.props;
     if (!this.state.visible) {
       return null;
     }
     const model = this.state.model;
+    let comment = this.state.commentDialog.attr?.comment;
     return ReactDOM.createPortal(
-      <Modal
-        title="修改表"
-        visible={this.state.visible}
-        onOk={this.onOk.bind(this)}
-        onCancel={this.onCancel.bind(this)}
-      >
-        <Form layout="vertical" size="small">
-          <Row gutter={24}>
-            <Col span={12}>
-              <Form.Item label="Table:">
-                <Input value={model.tableName}/>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="Comment:">
-                <Input value={model.tableName}/>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Tabs type="card" size="small">
-            <TabPane tab="列" key="1">
-              <div style={{ width: '100%', display: 'flex' }}>
-                <div className="ant-table ant-table-small" style={{ flex: 1 }}>
+      <>
+        <Modal
+          title="修改表"
+          visible={this.state.visible}
+          onOk={this.onOk.bind(this)}
+          onCancel={this.onCancel.bind(this)}
+        >
+          <Form layout="vertical" size="small">
+            <Row gutter={24}>
+              <Col span={12}>
+                <Form.Item label="Table:">
+                  <Input value={model.tableName}/>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item label="Comment:">
+                  <Input value={model.tableName}/>
+                </Form.Item>
+              </Col>
+            </Row>
+            <Tabs type="card" size="small">
+              <TabPane tab="列" key="1">
+                <div style={{ width: '100%', display: 'flex' }}>
+                  <div className="ant-table ant-table-small" style={{ flex: 1 }}>
+                    <table>
+                      <tbody className="ant-table-tbody">
+                      {model.attrs.map((attr) => {
+                        if (attr.modifyEnable) {
+                          return <tr key={attr.id}>
+                            <td colSpan={5}>
+                              <Row gutter={24}>
+                                <Col span={8}>
+                                  <Form.Item label="Name:">
+                                    <Input value={attr.name}
+                                           onChange={($event) => this.attrModify(attr, 'name', $event.target.value)}/>
+                                  </Form.Item>
+                                </Col>
+                                <Col span={8}>
+                                  <Form.Item label="Type:">
+                                    <SqlAttrInput value={attr.type}
+                                                  onChange={($event) => this.attrModify(attr, 'type', $event)}/>
+                                  </Form.Item>
+                                </Col>
+                                <Col span={8}>
+                                  <Form.Item label="Default:">
+                                    <Input value={attr.default} addonAfter={<a style={{color: '#fff'}} onClick={()=>{this.openCommentDialog(attr)}}><CommentOutlined /></a>}
+                                           onChange={($event) => this.attrModify(attr, 'default', $event.target.value)}/>
+                                  </Form.Item>
+                                </Col>
+                              </Row>
+                            </td>
+                          </tr>;
+                        } else {
+                          return <tr key={attr.id} className={classNames({
+                            'ant-table-row': true,
+                            'ant-table-row-level-0': true,
+                            [styles.selection]: attr.id === this.state.select
+                          })} onClick={() => this.clickAttrRow(attr)} onDoubleClick={() => this.dbClickAttrRow(attr)}>
+                            <td className={styles.column}><div>{attr.name}</div></td>
+                            <td className={styles.column}>
+                              <SqlAttrInput value={attr.type} readonly={true} onDoubleClick={() => this.dbClickAttrRow(attr)}/>
+                            </td>
+                            <td className={styles.column} width="100%">/*{attr.comment}*/</td>
+                          </tr>;
+                        }
+                      })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className={styles.tools}>
+                    <i onClick={this.attrAdd.bind(this)}><PlusOutlined className={styles.tools_icon}
+                                                                       style={{ color: '#4cba38' }}/></i>
+                    <i onClick={this.attrDelete.bind(this)}><MinusOutlined className={styles.tools_icon}
+                                                                           style={{ color: '#ff6660' }}/></i>
+                    <i><ArrowUpOutlined className={styles.tools_icon} style={{ color: '#02a6f2' }}/></i>
+                    <i><ArrowDownOutlined className={styles.tools_icon} style={{ color: '#02a6f2' }}/></i>
+                  </div>
+                </div>
+              </TabPane>
+              <TabPane tab="主键" key="2">
+                <div className="ant-table ant-table-small">
                   <table>
                     <tbody className="ant-table-tbody">
                     {model.attrs.map((attr) => {
-                      if (attr.modifyEnable) {
-                        return <tr key={attr.id}>
-                          <td colSpan={5}>
-                            <Row gutter={24}>
-                              <Col span={8}>
-                                <Form.Item label="Name:">
-                                  <Input value={attr.name}
-                                         onChange={($event) => this.attrModify(attr, 'name', $event.target.value)}/>
-                                </Form.Item>
-                              </Col>
-                              <Col span={8}>
-                                <Form.Item label="Type:">
-                                  <SqlAttrInput value={attr.type}
-                                                onChange={($event) => this.attrModify(attr, 'type', $event)}/>
-                                </Form.Item>
-                              </Col>
-                              <Col span={8}>
-                                <Form.Item label="Default:">
-                                  <Input value={attr.default}
-                                         onChange={($event) => this.attrModify(attr, 'default', $event.target.value)}/>
-                                </Form.Item>
-                              </Col>
-                            </Row>
-                          </td>
-                        </tr>;
-                      } else {
-                        return <tr key={attr.id} className={classNames({
-                          'ant-table-row': true,
-                          'ant-table-row-level-0': true,
-                          [styles.selection]: attr.id === this.state.select
-                        })} onClick={() => this.clickAttrRow(attr)} onDoubleClick={() => this.dbClickAttrRow(attr)}>
-                          <td className={styles.column}><div>{attr.name}</div></td>
-                          <td className={styles.column}>
-                            <SqlAttrInput value={attr.type} readonly={true} onDoubleClick={() => this.dbClickAttrRow(attr)}/>
-                          </td>
-                          <td className={styles.column}>/*{attr.comment}*/</td>
-                        </tr>;
-                      }
+                      return <tr key={attr.name} className="ant-table-row ant-table-row-level-0">
+                        <td>{attr.name}</td>
+                        <td></td>
+                        <td></td>
+                      </tr>;
                     })}
                     </tbody>
                   </table>
                 </div>
-                <div className={styles.tools}>
-                  <i onClick={this.attrAdd.bind(this)}><PlusOutlined className={styles.tools_icon}
-                                                                     style={{ color: '#4cba38' }}/></i>
-                  <i onClick={this.attrDelete.bind(this)}><MinusOutlined className={styles.tools_icon}
-                                                                         style={{ color: '#ff6660' }}/></i>
-                  <i><ArrowUpOutlined className={styles.tools_icon} style={{ color: '#02a6f2' }}/></i>
-                  <i><ArrowDownOutlined className={styles.tools_icon} style={{ color: '#02a6f2' }}/></i>
+              </TabPane>
+              <TabPane tab="Tab 3" key="3">
+                <div className="ant-table ant-table-small">
+                  <table>
+                    <tbody className="ant-table-tbody">
+                    {model.attrs.map((attr) => {
+                      return <tr key={attr.name} className={classNames({
+                        'ant-table-row': true,
+                        'ant-table-row-level-0': true,
+                      })}>
+                        <td>{attr.name}</td>
+                        <td></td>
+                        <td></td>
+                      </tr>;
+                    })}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
-            </TabPane>
-            <TabPane tab="主键" key="2">
-              <div className="ant-table ant-table-small">
-                <table>
-                  <tbody className="ant-table-tbody">
-                  {model.attrs.map((attr) => {
-                    return <tr key={attr.name} className="ant-table-row ant-table-row-level-0">
-                      <td>{attr.name}</td>
-                      <td></td>
-                      <td></td>
-                    </tr>;
-                  })}
-                  </tbody>
-                </table>
-              </div>
-            </TabPane>
-            <TabPane tab="Tab 3" key="3">
-              <div className="ant-table ant-table-small">
-                <table>
-                  <tbody className="ant-table-tbody">
-                  {model.attrs.map((attr) => {
-                    return <tr key={attr.name} className={classNames({
-                      'ant-table-row': true,
-                      'ant-table-row-level-0': true,
-                    })}>
-                      <td>{attr.name}</td>
-                      <td></td>
-                      <td></td>
-                    </tr>;
-                  })}
-                  </tbody>
-                </table>
-              </div>
-            </TabPane>
-          </Tabs>
-        </Form>
-        <Collapse ghost>
-          <Collapse.Panel header="脚本" key="1">
-            <Input.TextArea rows={5} value={this.state.sqlScript}></Input.TextArea>
-          </Collapse.Panel>
-        </Collapse>
-        {/*<Table columns={columns} dataSource={model.attrs}/>*/}
-      </Modal>,
+              </TabPane>
+            </Tabs>
+          </Form>
+          <Collapse ghost>
+            <Collapse.Panel header="脚本" key="1">
+              <SqlAttrInput value={this.state.sqlScript} readonly={true}/>
+              {/*<Input.TextArea rows={5} value={this.state.sqlScript}></Input.TextArea>*/}
+            </Collapse.Panel>
+          </Collapse>
+          {/*<Table columns={columns} dataSource={model.attrs}/>*/}
+        </Modal>
+        <Modal
+          title="备注"
+          visible={this.state.commentDialog.visible}
+          onOk={()=>{
+            this.attrModify(this.state.commentDialog.attr, 'comment', comment);
+            this.setState({
+              commentDialog: {
+                visible: false,
+                attr: undefined,
+              }
+            });
+          }}
+          onCancel={()=>{
+            this.setState({
+              commentDialog: {
+                visible: false,
+                attr: undefined,
+              }
+            });
+          }}
+        >
+          <Form.Item label="Comment:">
+            <Input value={comment} onChange={($event)=>{comment = $event.target.value}}/>
+          </Form.Item>
+        </Modal>
+      </>,
       graph.get('container'),
     );
   }

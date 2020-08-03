@@ -77,6 +77,8 @@ export class Tokenizer {
     'MOD',
     'DIV',
     'CREATE',
+    'ALTER',
+    'ADD',
     'TABLE',
     'VARCHAR',
     'INT',
@@ -93,6 +95,18 @@ export class Tokenizer {
       string = string.concat(this.stream.nextChar());
     }
     return string;
+  }
+
+  readWhileSpace(): Token | null{
+    // return ' \t\n\r'.indexOf(char) >= 0;
+    let string: string = '';
+    while (!this.stream.eof() && isWhiteSpace(this.stream.currentChar())) {
+      string = string.concat(this.stream.nextChar());
+      if('\n' === this.stream.currentChar()){
+        break;
+      }
+    }
+    return {type: 'string', value: string};
   }
 
   readNumber(): Token | null {
@@ -173,11 +187,14 @@ export class Tokenizer {
   }
 
   readNextToken(): Token | null {
-    this.readWhileIt(isWhiteSpace);
+    // this.readWhileIt(isWhiteSpace);
     if (this.stream.eof()) {
       return null;
     }
     const currentChar = this.stream.currentChar();
+    if(isWhiteSpace(currentChar)){
+      return this.readWhileSpace();
+    }
     if (isDigit(currentChar)) {
       return this.readNumber();
     }

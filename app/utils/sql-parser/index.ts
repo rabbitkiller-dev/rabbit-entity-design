@@ -1,3 +1,6 @@
+/**
+ * https://github.com/testbuddy/GetASTFromSQL
+ */
 import * as fs from 'fs';
 import * as path from 'path';
 import Stream from './Stream';
