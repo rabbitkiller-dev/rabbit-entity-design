@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { Input, Modal, Table, Form, Row, Col, Tabs, Collapse } from 'antd';
+import { Input, Modal, Table, Form, Row, Col, Tabs, Collapse, Checkbox } from 'antd';
 import {
   PlusOutlined,
   MinusOutlined,
@@ -24,7 +24,7 @@ interface TableModel extends BizTableNodeModel {
 
 interface AttrModel extends BizTableAttrModel {
   id: string;
-  modifyEnable: boolean;
+  modifyEnable?: boolean;
 }
 
 const { TabPane } = Tabs;
@@ -74,7 +74,7 @@ class AttrAddAction implements Action {
 
   run(table: TableModel): string {
     const modify = Object.keys(this.attr).find((key) => {
-      return this.attr[key] === this.origin[key];
+      return this.attr[key] !== this.origin[key];
     });
     if (!modify) {
       return undefined;
@@ -89,24 +89,26 @@ class AttrAddAction implements Action {
 class AttrModifyAction implements Action {
   type = 'attr_modify';
   attr: AttrModel;
+  origin: AttrModel;
 
-  constructor(public origin: AttrModel) {
+  constructor(origin: AttrModel) {
     this.attr = {
       id: origin.id,
-      name: origin.name,
-      type: origin.type,
-      'default': origin.default,
-      comment: origin.comment,
-      notNull: origin.notNull,
-      autoInc: origin.autoInc,
-      unique: origin.unique,
-      primaryKey: origin.primaryKey,
-    } as any;
+      name: origin.name || '',
+      type: origin.type || '',
+      'default': origin.default || '',
+      comment: origin.comment || '',
+      notNull: origin.notNull || false,
+      autoInc: origin.autoInc || false,
+      unique: origin.unique || false,
+      primaryKey: origin.primaryKey || false,
+    };
+    this.origin = { ...this.attr };
   }
 
   run(table: TableModel): string {
     const modify = Object.keys(this.attr).find((key) => {
-      return this.attr[key] === this.origin[key];
+      return this.attr[key] !== this.origin[key];
     });
     if (!modify) {
       return undefined;
@@ -117,8 +119,16 @@ class AttrModifyAction implements Action {
     // ALTER TABLE auth_role_staff ADD PRIMARY KEY (userId);
     let script = `ALTER TABLE ${table.tableName} MODIFY ${this.attr.name} ${this.attr.type}`;
     if (this.attr.notNull !== this.origin.notNull) script += this.attr.notNull ? ' NOT NULL' : ' NULL';
-    if (this.attr.default && (this.attr.default !== this.origin.default)) script += ` DEFAULT ${this.attr.default}`;
-    if (this.attr.comment && (this.attr.comment !== this.origin.comment)) script += ` COMMENT '${this.attr.comment}'`;
+    // 设置默认值
+    if (this.attr.default && this.attr.default !== this.origin.default) {
+      script += ` DEFAULT ${this.attr.default}`;
+    } else if (!this.attr.default && this.origin.default) {
+      script += ` DROP DEFAULT`;
+    }
+    // 设置备注
+    if (this.attr.comment && this.attr.comment !== this.origin.comment) {
+      script += ` COMMENT '${this.attr.comment}'`;
+    }
     return script + ';';
   }
 }
@@ -138,7 +148,7 @@ class AttrDeleteAction implements Action {
       autoInc: origin.autoInc,
       unique: origin.unique,
       primaryKey: origin.primaryKey,
-    } as any;
+    };
   }
 
   run(table: TableModel): string {
@@ -268,6 +278,13 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
     this.executeAction();
   }
 
+  tableModify(key, value) {
+    this.state.model[key] = value;
+    this.setState({
+      model: this.state.model,
+    });
+  }
+
   executeAction() {
     let scripts: string[] = [];
     scripts.push(...this.actions.map((action) => {
@@ -278,7 +295,7 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
     });
   }
 
-  openCommentDialog(attr: AttrModel){
+  openCommentDialog(attr: AttrModel) {
     this.setState({
       commentDialog: {
         visible: true,
@@ -306,12 +323,14 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item label="Table:">
-                  <Input value={model.tableName}/>
+                  <Input value={model.tableName}
+                         onChange={($event) => this.tableModify('tableName', $event.target.value)}/>
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item label="Comment:">
-                  <Input value={model.tableName}/>
+                  <Input value={model.tableComment}
+                         onChange={($event) => this.tableModify('tableComment', $event.target.value)}/>
                 </Form.Item>
               </Col>
             </Row>
@@ -340,10 +359,49 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
                                 </Col>
                                 <Col span={8}>
                                   <Form.Item label="Default:">
-                                    <Input value={attr.default} addonAfter={<a style={{color: '#fff'}} onClick={()=>{this.openCommentDialog(attr)}}><CommentOutlined /></a>}
-                                           onChange={($event) => this.attrModify(attr, 'default', $event.target.value)}/>
+                                    <Input.Group size="small">
+                                      <SqlAttrInput value={attr.default}
+                                                    onChange={($event) => this.attrModify(attr, 'default', $event)}/>
+                                      <span className="ant-input-group-addon">
+                                        <a style={{ color: '#fff' }}
+                                           onClick={() => this.openCommentDialog(attr)}>
+                                          <CommentOutlined/>
+                                        </a>
+                                      </span>
+                                    </Input.Group>
+                                    {/*<Input value={attr.default}
+                                           addonAfter={<a style={{ color: '#fff' }} onClick={() => {
+                                             this.openCommentDialog(attr);
+                                           }}><CommentOutlined/></a>}
+                                           onChange={($event) => this.attrModify(attr, 'default', $event.target.value)}/>*/}
                                   </Form.Item>
                                 </Col>
+                                <div style={{ position: 'absolute', bottom: 0, right: 0 }}>
+                                  <Checkbox
+                                    checked={attr.notNull}
+                                    onChange={($event) => this.attrModify(attr, 'notNull', $event.target.checked)}
+                                  >
+                                    Not Null
+                                  </Checkbox>
+                                  <Checkbox
+                                    checked={attr.autoInc}
+                                    onChange={($event) => this.attrModify(attr, 'autoInc', $event.target.checked)}
+                                  >
+                                    Auto Inc
+                                  </Checkbox>
+                                  <Checkbox
+                                    checked={attr.unique}
+                                    onChange={($event) => this.attrModify(attr, 'unique', $event.target.checked)}
+                                  >
+                                    unique
+                                  </Checkbox>
+                                  <Checkbox
+                                    checked={attr.primaryKey}
+                                    onChange={($event) => this.attrModify(attr, 'primaryKey', $event.target.checked)}
+                                  >
+                                    Primary Key
+                                  </Checkbox>
+                                </div>
                               </Row>
                             </td>
                           </tr>;
@@ -353,11 +411,15 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
                             'ant-table-row-level-0': true,
                             [styles.selection]: attr.id === this.state.select
                           })} onClick={() => this.clickAttrRow(attr)} onDoubleClick={() => this.dbClickAttrRow(attr)}>
-                            <td className={styles.column}><div>{attr.name}</div></td>
                             <td className={styles.column}>
-                              <SqlAttrInput value={attr.type} readonly={true} onDoubleClick={() => this.dbClickAttrRow(attr)}/>
+                              <div>{attr.name}</div>
                             </td>
-                            <td className={styles.column} width="100%">/*{attr.comment}*/</td>
+                            <td className={styles.column}>
+                              <SqlAttrInput value={attr.type} readonly={true}
+                                            onDoubleClick={() => this.dbClickAttrRow(attr)}/>
+                            </td>
+                            <td className={styles.column} style={{ color: '#827e7e' }}
+                                width="100%">/*{attr.comment}*/</td>
                           </tr>;
                         }
                       })}
@@ -411,7 +473,7 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
           </Form>
           <Collapse ghost>
             <Collapse.Panel header="脚本" key="1">
-              <SqlAttrInput value={this.state.sqlScript} readonly={true}/>
+              <SqlAttrInput value={this.state.sqlScript}/>
               {/*<Input.TextArea rows={5} value={this.state.sqlScript}></Input.TextArea>*/}
             </Collapse.Panel>
           </Collapse>
@@ -420,7 +482,7 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
         <Modal
           title="备注"
           visible={this.state.commentDialog.visible}
-          onOk={()=>{
+          onOk={() => {
             this.attrModify(this.state.commentDialog.attr, 'comment', comment);
             this.setState({
               commentDialog: {
@@ -429,7 +491,7 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
               }
             });
           }}
-          onCancel={()=>{
+          onCancel={() => {
             this.setState({
               commentDialog: {
                 visible: false,
@@ -439,7 +501,9 @@ class ModifyTable extends React.Component<ModifyTableProps, ModifyTableState> {
           }}
         >
           <Form.Item label="Comment:">
-            <Input value={comment} onChange={($event)=>{comment = $event.target.value}}/>
+            <Input value={comment} onChange={($event) => {
+              comment = $event.target.value;
+            }}/>
           </Form.Item>
         </Modal>
       </>,
@@ -455,37 +519,44 @@ interface SqlAttrInputProp {
   readonly?: boolean;
 
   onChange?(value: string): void
+
   onDoubleClick?($event: MouseEvent): void
 }
 
-let savedSel;
-
 function SqlAttrInput(prop: SqlAttrInputProp) {
+  const [originValue, setOriginValue] = useState<string>(null);
+  const [temp] = useState<{ savedSel: number }>({ savedSel: null });
   const inputEl = useRef<HTMLDivElement>(null);
-  const tokens = (prop.value && prop.value.trim()) ? toTokens(prop.value) : [];
-  const htmls = tokens.map((token) => {
-    return `<span class="${styles[token.type]}" spellcheck="false">${token.value}</span>`;
-  });
+  const isChange = !originValue || originValue !== prop.value;
   useEffect(() => {
-    if(!prop.readonly){
-      inputEl.current.contentEditable = 'true';
+    inputEl.current.contentEditable = prop.readonly ? 'false' : 'true';
+    if (isChange) {
+      const tokens = (prop.value && prop.value.trim()) ? toTokens(prop.value) : [];
+      const htmls = tokens.map((token) => {
+        return `<span class="${styles[token.type]}" spellcheck="false">${token.value}</span>`;
+      });
+      inputEl.current.innerHTML = htmls.join('');
+      setOriginValue(prop.value);
     }
-    inputEl.current.innerHTML = htmls.join('');
-    if (savedSel && !prop.readonly) {
-      setCaretPosition(inputEl.current, savedSel);
+    if (temp.savedSel && !prop.readonly) {
+      // 还原光标
+      setCaretPosition(inputEl.current, temp.savedSel);
+      temp.savedSel = null;
     }
 
     function onInput($event) {
-      console.log('input', $event);
-      savedSel = getCaretCharacterOffsetWithin(inputEl.current);
-      prop.onChange(inputEl.current.innerText);
+      // 保存光标
+      temp.savedSel = getCaretCharacterOffsetWithin(inputEl.current);
+      prop.onChange && prop.onChange(inputEl.current.innerText);
     }
 
-    function onMouseDown($event){
+    function onMouseDown($event) {
     }
-    function onDoubleClick($event){
-      prop.onDoubleClick($event);
+
+    function onDoubleClick($event) {
+      prop.onDoubleClick && prop.onDoubleClick($event);
     }
+
     inputEl.current.addEventListener('input', onInput);
     inputEl.current.addEventListener('mousedown', onMouseDown);
     inputEl.current.addEventListener('dblclick', onDoubleClick);

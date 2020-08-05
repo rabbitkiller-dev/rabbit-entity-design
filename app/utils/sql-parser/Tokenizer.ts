@@ -76,9 +76,13 @@ export class Tokenizer {
     'OR',
     'MOD',
     'DIV',
+    'COMMENT',
+    'DEFAULT',
+    'DROP',
     'CREATE',
     'ALTER',
     'ADD',
+    'MODIFY',
     'TABLE',
     'VARCHAR',
     'INT',
@@ -113,7 +117,8 @@ export class Tokenizer {
     let digits: string = '';
     while (
       !isWhiteSpace(this.stream.currentChar()) &&
-      !isSeperatorChar(this.stream.currentChar())
+      !isSeperatorChar(this.stream.currentChar()) &&
+      isDigit(this.stream.currentChar())
       ) {
       digits = digits.concat(this.stream.currentChar());
       this.stream.nextChar();
@@ -143,7 +148,7 @@ export class Tokenizer {
         letters = letters.concat(char);
       }
     }
-    return { type: 'string', value: letters };
+    return { type: 'string', value: closingSign+letters+closingSign };
   }
 
   readOperator(): Token | null {
