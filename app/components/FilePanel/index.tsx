@@ -12,10 +12,11 @@ import { Dropdown, Form, Input, Menu, Modal } from 'antd';
 import { TreeNodeModel } from '../Tree/tree-node.model';
 import { NzFormatEmitEvent } from '../Tree/interface';
 import path from 'path';
-import { checkFileExists, checkFileName } from '../../features/project';
+import { checkFileExists, checkFileName, getAppPath } from '../../features/project';
 import { createFile, createFolder } from '../../features/fileSlice';
 
 interface FilePanelProps {
+  style?: React.CSSProperties;
   onShowFile?(fileNode: FileNode): void;
 }
 
@@ -62,6 +63,10 @@ export default function FilePanel(props: FilePanelProps) {
     if(currentNode){
       const fileNode: FileNode = currentNode.origin;
       shell.showItemInFolder(fileNode.path)
+    }else{
+      getAppPath().then((appPath)=>{
+        path.join(appPath, 'default');
+      });
     }
 
   }
@@ -116,7 +121,7 @@ export default function FilePanel(props: FilePanelProps) {
     return null;
   })();
   return (
-    <Dropdown overlay={<Menu style={{ minWidth: '150px' }}>
+    <Dropdown overlayStyle={props.style} overlay={<Menu style={{ minWidth: '150px' }}>
       <Menu.SubMenu title="新建">
         <Menu.Item icon={<DragIcon/>} onClick={() => openNewFile('.mindmap')}>脑图</Menu.Item>
         <Menu.Item icon={<DataSourceIcon/>} onClick={() => openNewFile('.datasource')}>数据库</Menu.Item>

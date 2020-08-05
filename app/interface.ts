@@ -22,5 +22,6 @@ export interface BizTableAttrModel {
 }
 export interface BizTableNodeModel extends NodeModel {
   tableName: string;
+  tableComment: string;
   attrs: Array<BizTableAttrModel>;
 }

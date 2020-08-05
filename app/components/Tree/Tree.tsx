@@ -110,6 +110,11 @@ export class Tree extends React.Component<TreeProps, TreeState> {
     this.setClassMap();
   }
 
+  componentWillUnmount(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   initNzData(value: any[]): void {
     if (Array.isArray(value)) {
       treeService.isCheckStrictly = !!this.props.nzCheckStrictly;

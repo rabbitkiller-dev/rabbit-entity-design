@@ -1,17 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import upperFirst from 'lodash/upperFirst';
-import { useSelector, useDispatch } from 'react-redux';
-import { FolderFilled } from '@ant-design/icons';
-import { Divider, Dropdown, Menu, Tooltip } from 'antd';
 import { createFromIconfontCN } from '@ant-design/icons';
-import GGEditor, { Flow, ContextMenu, constants, Command, Item, ItemPanel, global } from 'gg-editor';
-
+import { Divider, Menu, Tooltip } from 'antd';
+import GGEditor, { Command, constants, ContextMenu, Flow, global } from 'gg-editor';
 // const fs = require('electron').remote.require('fs');
 import fs from 'fs';
 import styles from '../../containers/Editor.less';
 import { ModifyTable } from '../gg-editor';
 import { GGroup, Graph, GShape, NodeModel } from 'gg-editor/lib/common/interfaces';
-import { eventService, EVENT_ENUM } from '../services';
+import { EVENT_ENUM, eventService } from '../services';
+
+export enum ContextMenuType {
+  Canvas = 'canvas',
+  Node = 'node',
+  Edge = 'edge'
+}
 
 const { EditorCommand, GraphCustomEvent, GraphMode } = constants;
 const FLOW_COMMAND_LIST = [
@@ -30,6 +33,7 @@ const IconFont = createFromIconfontCN({
 });
 
 interface EntityUMLEditorProps {
+  style?: React.CSSProperties;
   filePath: string;
 }
 
@@ -143,28 +147,6 @@ export default function EntityUMLEditor(props: EntityUMLEditorProps) {
           );
         })}
       </div>
-      {/*      <ItemPanel className={styles.itemPanel}>
-        <Item
-          className={styles.item}
-          model={{
-            type: 'bizTableNode',
-            size: [120, 140],
-            tableName: 'Node',
-            attrs: [
-              { name: 'id', type: 'Varchar(64)' },
-              { name: 'opacity', type: 'Int' },
-              { name: 'transparent', type: 'Boolean' },
-            ],
-          }}
-        >
-          <img
-            src={table_drag_icon}
-            width="55"
-            height="56"
-            draggable={false}
-          />
-        </Item>
-      </ItemPanel>*/}
       <Flow
         className={styles.graph}
         data={data}
@@ -210,6 +192,26 @@ export default function EntityUMLEditor(props: EntityUMLEditorProps) {
               graph.setItemState(e.item, 'dragenter', false);
             });
           }
+        }}
+      />
+      <ContextMenu
+        type={ContextMenuType.Node}
+        renderContent={(item, position, hide) => {
+          const { x: left, y: top } = position;
+
+          return (
+            <>
+              <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+                   onClick={hide}
+                   onContextMenu={($event)=> {$event.preventDefault();hide()}}>
+              </div>
+              <div style={{ position: 'absolute', top, left }}>
+                <Menu prefixCls="ant-dropdown-menu" mode="vertical" selectable={false} onClick={hide}>
+                  <Menu.Item>生成DDL到粘贴板</Menu.Item>
+                </Menu>
+              </div>
+            </>
+          );
         }}
       />
       <ModifyTable/>

@@ -45,12 +45,12 @@ export default function EntityEditor(props: ModelEditorProps) {
       <div className={styles.entity_editor_content}>
         <div className={styles.ed_head_bar}></div>
         <div className={styles.ed_left_view} style={{width: '300px'}}>
-          {showSideBarLeft === 'file_panel' &&
+          <div style={{display: showSideBarLeft === 'file_panel' ? 'block': 'none', height: '100%'}}>
             <FilePanel onShowFile={onShowFile}/>
-          }
-          {showSideBarLeft === 'drag_panel' &&
+          </div>
+          <div style={{display: showSideBarLeft === 'drag_panel' ? 'block': 'none', height: '100%'}}>
             <DragPanel />
-          }
+          </div>
         </div>
         <div className={styles.ed_right_view} style={{width: 'calc(100% - 300px)'}}>
           {showFileExt === '.datasource' &&
