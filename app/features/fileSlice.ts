@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+
 const fs = require('electron').remote.require('fs');
 import path from 'path';
 // eslint-disable-next-line import/no-cycle
@@ -32,7 +33,7 @@ export const createFile = createAsyncThunk(
       title: path.basename(filepath),
       ext: path.extname(filepath),
       children: [],
-      isDirectory: false,
+      isDirectory: false
     };
   }
 );
@@ -47,7 +48,7 @@ export const createFolder = createAsyncThunk(
       title: path.basename(filepath),
       ext: path.extname(filepath),
       children: [],
-      isDirectory: true,
+      isDirectory: true
     };
   }
 );
@@ -91,10 +92,9 @@ const fileSlice = createSlice({
       const deepFileTree = JSON.parse(JSON.stringify(state.fileTree));
       if (path.dirname(fileNode.key) === '/') {
         deepFileTree.push(fileNode);
-        deepFileTree.children.sort(sort);
+        deepFileTree.sort(sort);
       } else {
         forEachTree(deepFileTree, (node: _FileNode) => {
-          console.log('folder:', node.key, path.dirname(fileNode.key));
           if (node.key === path.dirname(fileNode.key)) {
             node.children.push(fileNode);
             node.children.sort(sort);
@@ -109,10 +109,9 @@ const fileSlice = createSlice({
       const deepFileTree = JSON.parse(JSON.stringify(state.fileTree));
       if (path.dirname(fileNode.key) === '/') {
         deepFileTree.push(fileNode);
-        deepFileTree.children.sort(sort);
+        deepFileTree.sort(sort);
       } else {
         forEachTree(deepFileTree, (node: _FileNode) => {
-          console.log('folder:', node.key, path.dirname(fileNode.key));
           if (node.key === path.dirname(fileNode.key)) {
             node.children.push(fileNode);
             node.children.sort(sort);
@@ -120,7 +119,7 @@ const fileSlice = createSlice({
         });
       }
       state.fileTree = deepFileTree;
-    },
+    }
   }
 });
 
@@ -134,5 +133,5 @@ function sort(item1: _FileNode, item2: _FileNode): number {
   if (item1.isDirectory === item2.isDirectory) { // 如果一样就对比名称
     return FileNameCompare(item1.title, item2.title);
   }
-  return item1.isDirectory ? 1 : -1;
+  return item1.isDirectory ? -1 : 1;
 }

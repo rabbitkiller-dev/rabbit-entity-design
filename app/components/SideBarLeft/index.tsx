@@ -6,10 +6,7 @@ import {
   SmileOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import { getProject } from '../../features/project';
 import styles from './SideBarLeft.less';
-import { Link } from 'react-router-dom';
-import routes from '../../constants/routes.json';
 
 interface SideBarLeftProps {
   showType: 'file_panel' | 'drag_panel',
@@ -30,7 +27,6 @@ export class SideBarLeft extends React.Component<SideBarLeftProps, SideBarLeftSt
   }
 
   async componentDidMount() {
-    const projects = await getProject();
   }
 
   showTypeChange(type) {

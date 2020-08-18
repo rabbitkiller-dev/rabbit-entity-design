@@ -18,15 +18,6 @@ async function initApp() {
   }
 }
 
-export async function getProject(): Promise<Array<{ projectName: string }>> {
-  await initApp();
-  const appPath = await getAppPath();
-  const files = fs.readdirSync(appPath);
-  return files.map((file) => {
-    return { projectName: file };
-  });
-}
-
 export async function getDefaultFiles(): Promise<string[]> {
   const files: string[] = [];
   const defaultPath = path.join(await getAppPath(), 'default');
@@ -55,6 +46,7 @@ export function loopFile(target: string, call: (filepath: string) => boolean) {
   }
 }
 export async function getDefaultFileTree(target: string):　Promise<FileNode[]> {
+  await initApp();
   const nodes: FileNode[] = [];
   const targetStat = fs.statSync(target);
   if (targetStat.isDirectory()) {
